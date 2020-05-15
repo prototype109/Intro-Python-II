@@ -1,7 +1,6 @@
 from room import Room
 from player import Player
-import re
-
+from item import Item
 # Declare all the rooms
 
 room = {
@@ -35,6 +34,12 @@ room['narrow'].w_to = room['foyer']
 room['narrow'].n_to = room['treasure']
 room['treasure'].s_to = room['narrow']
 
+room['outside'].items = [Item('Knife', 'stabby stabby')]
+room['foyer'].items = [Item('Book', 'smarts')]
+room['overlook'].items = [Item('Health Kit', 'unbreak my heart')]
+room['narrow'].items = [Item('Bed', 'You wake up in minecraft')]
+room['treasure'].items = [Item('Box', 'What is in')]
+
 #
 # Main
 #
@@ -53,61 +58,56 @@ player = Player('Noob', room['outside'])
 #
 # If the user enters "q", quit the game.
 
+def attempt_move(direction_input):
+    directions = {
+        "n":("n_to", "north"),
+        "e":("e_to", "east"),
+        "s":("s_to", "south"),
+        "w":("w_to", "west"),
+    }
 
-while True:
+    if direction_input.lower() == 'q' or direction_input.lower() == 'quit':
+        return False
+
+    possible_room = player.current_room.__getattribute__(directions[direction_input][0])
+
+    if  possible_room != None:
+        player.current_room = possible_room
+    else:
+        print(f'''
+            ----------------------------------------------
+
+            there is no available room to the {directions[direction_input][1]}
+            ----------------------------------------------
+        ''')
+    return True
+
+
+continue_adventure = True
+
+while continue_adventure:
     print(player)
-    advance = input(
+    print(player.current_room)
+    selection = input(
         '''Please select direction that you would like to go in
         n - North
         e - East
         s - South
         w - West
-        q - Quit
-        ''')
-    if advance.lower() == 'n' or advance.lower() == 'north':
-        if player.current_room.n_to != None:
-            player.current_room = player.current_room.n_to
+        ________________________________________________________
+        i, inventory - inventory
+        q, quit - Quit
+        ''').split(' ')
+    
+    if len(selection) > 1:
+        if selection[0] == 'take':
+            player.take_item(selection[1])
+        elif selection[0] == 'drop':
+            player.drop_item(selection[1])
+    else:
+        if selection[0] == 'i' or selection[0] == 'inventory':
+            player.show_inventory()
         else:
-            print('''
-            ----------------------------------------------
-
-            there is no available room to the north
-            ----------------------------------------------
-            ''')
-
-    if advance.lower() == 'e' or advance.lower() == 'east':
-        if player.current_room.e_to != None:
-            player.current_room = player.current_room.e_to
-        else:
-            print('''
-            ----------------------------------------------
-
-            there is no available room to the east
-            ----------------------------------------------
-            ''')
-
-    if advance.lower() == 's' or advance.lower() == 'south':
-        if player.current_room.s_to != None:
-            player.current_room = player.current_room.s_to
-        else:
-            print('''
-            ----------------------------------------------
-
-            there is no available room to the south
-            ----------------------------------------------
-            ''')
-
-    if advance.lower() == 'w' or advance.lower() == 'west':
-        if player.current_room.w_to != None:
-            player.current_room = player.current_room.w_to
-        else:
-            print('''
-            ----------------------------------------------
-
-            there is no available room to the west
-            ----------------------------------------------
-            ''')
-
-    if advance.lower() == 'q' or advance.lower() == 'quit':
-        break
+            continue_adventure = attempt_move(selection[0])
+    
 
